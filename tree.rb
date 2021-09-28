@@ -9,23 +9,24 @@ class Tree
     end
 
     def build_tree(array_of_data)
+        @data = array_of_data.sort.uniq
         @root = get_tree(array_of_data)
     end
 
     def insert(value_inserted, tree=@root)
         case
         when value_inserted == tree.value
-            raise "Value already in the tree. No duplicates allowed!"
+            return nil
         when value_inserted < tree.value
             if tree.left_children == nil
-                tree.left_children = value_inserted
+                tree.left_children = Node.new(value_inserted)
                 return
             else
                 insert(value_inserted, tree.left_children)
             end
         when value_inserted > tree.value
             if tree.right_children == nil
-                tree.right_children = value_inserted
+                tree.right_children = Node.new(value_inserted)
                 return
             else
                 insert(value_inserted, tree.right_children)
@@ -71,14 +72,14 @@ class Tree
         return if tree.nil?
 
         inorder(tree.left_children)
-        print "#{tree.value}"
+        print "#{tree.value} "
         inorder(tree.right_children)
     end
 
     def preorder(tree=@root)
         return if tree.nil?
 
-        print "#{tree.value}"
+        print "#{tree.value} "
         preorder(tree.left_children)
         preorder(tree.right_children)
     end
@@ -88,7 +89,7 @@ class Tree
 
         postorder(tree.left_children)
         postorder(tree.right_children)
-        print "#{tree.value}"
+        print "#{tree.value} "
     end
 
     def height(tree=@root, counter=0)
@@ -102,6 +103,43 @@ class Tree
         counter += left_edge if left_edge > right_edge
         counter += right_edge if right_edge > left_edge
         return counter
+    end
+
+    def depth(node=@root, parent=@root, edges=0)
+        return 0 if node == parent
+        return -1 if parent.nil?
+
+        if node < parent.value
+            edges += 1
+            depth(node, parent.left_children, edges)
+        elsif node > parent.value
+            edges += 1
+            depth(node, parent.right_children, edges)
+        else
+            edges
+        end
+    end
+
+    def balanced?(node=@root)
+        return true if node.nil?
+
+        left_height = height(node.left_children)
+        right_height = height(node.right_children)
+
+        return true if (left_height - right_height).abs <= 1 && balanced?(node.left_children) && balanced?(node.right_children)
+
+        false
+    end
+
+    def rebalance
+        @data = inorder_array
+        @root = build_tree(@data)
+    end
+
+    def pretty_print(node = @root, prefix = '', is_left = true)
+        pretty_print(node.right_children, "#{prefix}#{is_left ? '│   ' : '    '}", false) if node.right_children
+        puts "#{prefix}#{is_left ? '└── ' : '┌── '}#{node.value}"
+        pretty_print(node.left_children, "#{prefix}#{is_left ? '    ' : '│   '}", true) if node.left_children
     end
 
     private
@@ -137,8 +175,58 @@ class Tree
             sort_tree(tree.right_children, value_inserted)
         end
     end
+
+    def inorder_array(node=@root, array = [])
+        unless node.nil?
+            inorder_array(node.left_children, array)
+            array << node.value
+            inorder_array(node.right_children, array)
+        end
+        array
+    end
+
+    def inorder_array(node=@root, array=[])
+        unless node.nil?
+            inorder_array(node.left_children, array)
+            array << node.value
+            inorder_array(node.right_children, array)
+        end
+        array
+    end
 end
 
-teste = Tree.new
-p teste.build_tree([1,2,3,4,5,5])
-teste.insert(0)
+test_array = (Array.new(15) { rand(1..100)})
+Node_Tree = Tree.new
+Node_Tree.build_tree(test_array)
+Node_Tree.pretty_print
+p "Balanced: #{Node_Tree.balanced?}"
+p "Level Order:"
+p Node_Tree.level_order
+p "Pre Order"
+p Node_Tree.preorder
+p "Post Order"
+p Node_Tree.postorder
+p "Inorder"
+p Node_Tree.inorder
+p "Add 169"
+Node_Tree.insert(169)
+p "Add 150"
+Node_Tree.insert(150)
+p "Add 175"
+Node_Tree.insert(175)
+p "Add 190"
+Node_Tree.insert(190)
+Node_Tree.pretty_print
+p "Balanced: #{Node_Tree.balanced?}"
+p "Rebalance"
+Node_Tree.rebalance
+Node_Tree.pretty_print
+p "Balanced: #{Node_Tree.balanced?}"
+p "Level Order:"
+p Node_Tree.level_order
+p "Pre Order"
+p Node_Tree.preorder
+p "Post Order"
+p Node_Tree.postorder
+p "Inorder"
+p Node_Tree.inorder
